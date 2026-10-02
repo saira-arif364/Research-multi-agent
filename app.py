@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 import streamlit as st
 
 from crew import build_crew
@@ -25,7 +23,9 @@ st.markdown(
     """
     <style>
 
-    /* ---------- Global ---------- */
+    /* ==============================================
+       MAIN APPLICATION
+       ============================================== */
 
     .stApp {
         background:
@@ -35,13 +35,13 @@ st.markdown(
                 transparent 28%
             ),
             radial-gradient(
-                circle at 90% 20%,
+                circle at 90% 15%,
                 rgba(99, 102, 241, 0.10),
                 transparent 30%
             ),
             #07111f;
-        color: #e5edf7;
     }
+
 
     .block-container {
         max-width: 1180px;
@@ -49,7 +49,10 @@ st.markdown(
         padding-bottom: 4rem;
     }
 
-    /* ---------- Header ---------- */
+
+    /* ==============================================
+       BRAND
+       ============================================== */
 
     .brand {
         display: flex;
@@ -58,22 +61,31 @@ st.markdown(
         margin-bottom: 8px;
     }
 
+
     .brand-icon {
         width: 48px;
         height: 48px;
+
         border-radius: 15px;
+
         display: flex;
         align-items: center;
         justify-content: center;
+
         font-size: 24px;
-        background: linear-gradient(
-            135deg,
-            #38bdf8,
-            #6366f1
-        );
+
+        background:
+            linear-gradient(
+                135deg,
+                #38bdf8,
+                #6366f1
+            );
+
         box-shadow:
-            0 0 30px rgba(56, 189, 248, 0.22);
+            0 0 30px
+            rgba(56, 189, 248, 0.25);
     }
+
 
     .brand-title {
         font-size: 30px;
@@ -81,178 +93,396 @@ st.markdown(
         letter-spacing: -1px;
     }
 
+
     .brand-subtitle {
         color: #8fa3ba;
         font-size: 14px;
         margin-top: 2px;
     }
 
-    /* ---------- Hero ---------- */
+
+    /* ==============================================
+       HERO
+       ============================================== */
 
     .hero {
-        padding: 36px 38px;
+        padding: 38px;
+
         margin-top: 24px;
-        margin-bottom: 22px;
+        margin-bottom: 24px;
+
         border-radius: 26px;
+
         background:
             linear-gradient(
                 135deg,
-                rgba(15, 31, 51, 0.96),
-                rgba(9, 22, 39, 0.96)
+                rgba(15, 31, 51, 0.97),
+                rgba(9, 22, 39, 0.97)
             );
-        border: 1px solid rgba(148, 163, 184, 0.12);
+
+        border:
+            1px solid
+            rgba(148, 163, 184, 0.12);
+
         box-shadow:
-            0 20px 70px rgba(0, 0, 0, 0.22);
+            0 20px 70px
+            rgba(0, 0, 0, 0.25);
     }
+
 
     .hero-title {
         font-size: 42px;
         line-height: 1.05;
+
         font-weight: 850;
+
         letter-spacing: -1.8px;
+
         margin-bottom: 14px;
     }
 
+
     .gradient-text {
-        background: linear-gradient(
-            90deg,
-            #67e8f9,
-            #60a5fa,
-            #a78bfa
-        );
+        background:
+            linear-gradient(
+                90deg,
+                #67e8f9,
+                #60a5fa,
+                #a78bfa
+            );
+
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
+
     .hero-description {
         color: #9fb1c5;
+
         font-size: 16px;
+
         line-height: 1.7;
+
         max-width: 760px;
     }
 
-    /* ---------- Agent cards ---------- */
+
+    /* ==============================================
+       PIPELINE
+       ============================================== */
+
+    .pipeline {
+        display: flex;
+        align-items: center;
+
+        gap: 8px;
+
+        margin: 22px 0;
+    }
+
+
+    .pipeline-step {
+        flex: 1;
+
+        padding: 13px 10px;
+
+        text-align: center;
+
+        border-radius: 14px;
+
+        background:
+            rgba(12, 28, 47, 0.75);
+
+        border:
+            1px solid
+            rgba(148, 163, 184, 0.09);
+
+        color: #71869d;
+
+        font-size: 12px;
+
+        font-weight: 650;
+    }
+
+
+    .pipeline-arrow {
+        color: #475569;
+    }
+
+
+    /* ==============================================
+       AGENT PANEL
+       ============================================== */
 
     .agent-panel {
         padding: 20px;
+
         border-radius: 20px;
-        background: rgba(12, 28, 47, 0.82);
-        border: 1px solid rgba(148, 163, 184, 0.10);
+
+        background:
+            rgba(12, 28, 47, 0.82);
+
+        border:
+            1px solid
+            rgba(148, 163, 184, 0.10);
+
         margin-bottom: 20px;
     }
 
-    .agent-title {
-        font-size: 13px;
-        font-weight: 700;
+
+    .agent-panel-title {
+        font-size: 12px;
+
+        font-weight: 750;
+
         color: #8fa3ba;
+
         text-transform: uppercase;
+
         letter-spacing: 1px;
-        margin-bottom: 14px;
+
+        margin-bottom: 16px;
     }
+
 
     .agent-row {
         display: flex;
+
         align-items: center;
+
         gap: 12px;
+
         padding: 11px 0;
-        border-bottom: 1px solid rgba(148, 163, 184, 0.07);
+
+        border-bottom:
+            1px solid
+            rgba(148, 163, 184, 0.07);
     }
+
 
     .agent-row:last-child {
         border-bottom: none;
     }
 
+
     .agent-dot {
-        width: 10px;
-        height: 10px;
+        width: 9px;
+        height: 9px;
+
         border-radius: 50%;
+
         flex-shrink: 0;
     }
 
-    .active {
+
+    .dot-active {
         background: #38bdf8;
-        box-shadow: 0 0 14px rgba(56, 189, 248, 0.9);
+
+        box-shadow:
+            0 0 14px
+            rgba(56, 189, 248, 0.9);
     }
 
-    .complete {
+
+    .dot-complete {
         background: #34d399;
     }
 
-    .waiting {
+
+    .dot-waiting {
         background: #475569;
     }
 
+
     .agent-name {
         font-weight: 650;
+
         color: #e5edf7;
     }
 
+
     .agent-status {
         margin-left: auto;
+
         color: #71869d;
+
         font-size: 12px;
     }
 
-    /* ---------- Buttons ---------- */
+
+    /* ==============================================
+       CURRENT AGENT
+       ============================================== */
+
+    .current-agent {
+        padding: 22px;
+
+        border-radius: 20px;
+
+        margin-bottom: 20px;
+
+        background:
+            linear-gradient(
+                135deg,
+                rgba(14, 165, 233, 0.10),
+                rgba(99, 102, 241, 0.10)
+            );
+
+        border:
+            1px solid
+            rgba(56, 189, 248, 0.18);
+
+        box-shadow:
+            0 12px 40px
+            rgba(0, 0, 0, 0.12);
+    }
+
+
+    .current-label {
+        font-size: 11px;
+
+        color: #67e8f9;
+
+        text-transform: uppercase;
+
+        letter-spacing: 1.2px;
+
+        font-weight: 800;
+
+        margin-bottom: 8px;
+    }
+
+
+    .current-title {
+        font-size: 22px;
+
+        font-weight: 800;
+
+        margin-bottom: 5px;
+    }
+
+
+    .current-description {
+        color: #8fa3ba;
+
+        font-size: 13px;
+    }
+
+
+    /* ==============================================
+       BUTTON
+       ============================================== */
 
     .stButton > button {
+
         width: 100%;
+
         border: none;
+
         border-radius: 14px;
-        padding: 12px 20px;
+
+        padding: 13px 20px;
+
         font-weight: 750;
+
         color: white;
-        background: linear-gradient(
-            135deg,
-            #0ea5e9,
-            #6366f1
-        );
+
+        background:
+            linear-gradient(
+                135deg,
+                #0ea5e9,
+                #6366f1
+            );
+
         box-shadow:
-            0 12px 28px rgba(37, 99, 235, 0.22);
-        transition: all 0.2s ease;
+            0 12px 28px
+            rgba(37, 99, 235, 0.22);
+
+        transition:
+            transform 0.2s ease,
+            box-shadow 0.2s ease;
     }
+
 
     .stButton > button:hover {
-        transform: translateY(-1px);
+
+        transform:
+            translateY(-1px);
+
         box-shadow:
-            0 16px 34px rgba(37, 99, 235, 0.30);
+            0 16px 34px
+            rgba(37, 99, 235, 0.30);
     }
 
-    /* ---------- Text area ---------- */
+
+    /* ==============================================
+       TEXT AREA
+       ============================================== */
 
     textarea {
         border-radius: 16px !important;
     }
 
-    /* ---------- Result ---------- */
+
+    /* ==============================================
+       RESULT
+       ============================================== */
 
     .result-header {
+
         display: flex;
+
         justify-content: space-between;
+
         align-items: center;
-        margin: 25px 0 12px;
+
+        margin:
+            28px 0 15px;
     }
 
+
     .result-title {
-        font-size: 25px;
+
+        font-size: 26px;
+
         font-weight: 800;
     }
 
+
     .source-badge {
-        padding: 7px 12px;
+
+        padding:
+            7px 12px;
+
         border-radius: 999px;
+
         font-size: 12px;
+
         color: #bae6fd;
-        background: rgba(14, 165, 233, 0.10);
-        border: 1px solid rgba(56, 189, 248, 0.16);
+
+        background:
+            rgba(14, 165, 233, 0.10);
+
+        border:
+            1px solid
+            rgba(56, 189, 248, 0.16);
     }
 
-    /* ---------- Sidebar ---------- */
+
+    /* ==============================================
+       SIDEBAR
+       ============================================== */
 
     section[data-testid="stSidebar"] {
-        background: #081522;
-        border-right: 1px solid rgba(148, 163, 184, 0.08);
+
+        background:
+            #081522;
+
+        border-right:
+            1px solid
+            rgba(148, 163, 184, 0.08);
     }
+
 
     </style>
     """,
@@ -271,63 +501,49 @@ AGENTS = [
     "Writer",
 ]
 
+
 if "agent_states" not in st.session_state:
+
     st.session_state.agent_states = {
-        name: "waiting"
-        for name in AGENTS
+        agent: "waiting"
+        for agent in AGENTS
     }
 
+
 if "current_agent" not in st.session_state:
+
     st.session_state.current_agent = None
 
 
 # =========================================================
-# CALLBACK
+# AGENT CALLBACK
 # =========================================================
 
-def make_step_callback(agent_name, status_placeholder):
+def research_status_callback(agent_name):
 
-    def callback(step_output):
+    """
+    CrewAI calls this whenever an agent performs a step.
 
-        st.session_state.current_agent = agent_name
+    We use it to remember which agent is currently active.
+    """
 
-        for name in AGENTS:
+    st.session_state.current_agent = agent_name
 
-            if AGENTS.index(name) < AGENTS.index(agent_name):
-                st.session_state.agent_states[name] = "complete"
+    current_index = AGENTS.index(agent_name)
 
-            elif name == agent_name:
-                st.session_state.agent_states[name] = "active"
+    for index, agent in enumerate(AGENTS):
 
-        status_placeholder.markdown(
-            f"""
-            <div class="agent-panel">
+        if index < current_index:
 
-                <div class="agent-title">
-                    Live Research Team
-                </div>
+            st.session_state.agent_states[agent] = "complete"
 
-                <div style="
-                    font-size:22px;
-                    font-weight:800;
-                    margin-bottom:6px;
-                ">
-                    🔵 {agent_name} is working
-                </div>
+        elif index == current_index:
 
-                <div style="
-                    color:#8fa3ba;
-                    font-size:14px;
-                ">
-                    The team is processing your research question...
-                </div>
+            st.session_state.agent_states[agent] = "active"
 
-            </div>
-            """,
-            unsafe_allow_html=True,
-        )
+        else:
 
-    return callback
+            st.session_state.agent_states[agent] = "waiting"
 
 
 # =========================================================
@@ -366,29 +582,32 @@ with st.sidebar:
         state = st.session_state.agent_states[agent]
 
         if state == "active":
-            icon = "🔵"
-            label = "Working"
+
+            dot_class = "dot-active"
+            status = "Working"
 
         elif state == "complete":
-            icon = "🟢"
-            label = "Complete"
+
+            dot_class = "dot-complete"
+            status = "Complete"
 
         else:
-            icon = "⚪"
-            label = "Waiting"
+
+            dot_class = "dot-waiting"
+            status = "Waiting"
 
         st.markdown(
             f"""
             <div class="agent-row">
 
-                <div>{icon}</div>
+                <div class="agent-dot {dot_class}"></div>
 
                 <div class="agent-name">
                     {agent}
                 </div>
 
                 <div class="agent-status">
-                    {label}
+                    {status}
                 </div>
 
             </div>
@@ -399,16 +618,20 @@ with st.sidebar:
     st.markdown("---")
 
     st.caption(
-        "LLM: Groq • Model: GPT-OSS 120B"
+        "LLM: Groq GPT-OSS 120B"
     )
 
     st.caption(
-        "Orchestration: CrewAI"
+        "Framework: CrewAI"
+    )
+
+    st.caption(
+        "Search: Tavily"
     )
 
 
 # =========================================================
-# HEADER
+# BRAND
 # =========================================================
 
 st.markdown(
@@ -420,6 +643,7 @@ st.markdown(
         </div>
 
         <div>
+
             <div class="brand-title">
                 Research AI
             </div>
@@ -427,6 +651,7 @@ st.markdown(
             <div class="brand-subtitle">
                 Multi-agent research workspace
             </div>
+
         </div>
 
     </div>
@@ -444,16 +669,21 @@ st.markdown(
     <div class="hero">
 
         <div class="hero-title">
+
             Turn a question into
+
             <span class="gradient-text">
                 evidence.
             </span>
+
         </div>
 
         <div class="hero-description">
-            Four specialized AI agents research, verify, analyze,
-            and write a professional report — with live visibility
-            into who is working.
+
+            Four specialized AI agents research,
+            verify, analyze and write a professional
+            research report.
+
         </div>
 
     </div>
@@ -463,47 +693,77 @@ st.markdown(
 
 
 # =========================================================
-# INPUT
+# PIPELINE
+# =========================================================
+
+st.markdown(
+    """
+    <div class="pipeline">
+
+        <div class="pipeline-step">
+            🔎 Research
+        </div>
+
+        <div class="pipeline-arrow">
+            →
+        </div>
+
+        <div class="pipeline-step">
+            ✓ Verify
+        </div>
+
+        <div class="pipeline-arrow">
+            →
+        </div>
+
+        <div class="pipeline-step">
+            🧠 Analyze
+        </div>
+
+        <div class="pipeline-arrow">
+            →
+        </div>
+
+        <div class="pipeline-step">
+            ✍️ Write
+        </div>
+
+    </div>
+    """,
+    unsafe_allow_html=True,
+)
+
+
+# =========================================================
+# QUESTION INPUT
 # =========================================================
 
 question = st.text_area(
     "Research question",
+
     placeholder=(
-        "Example: What are the latest developments in "
-        "generative AI agents in 2026?"
+        "Ask anything you want the research team to investigate...\n\n"
+        "Example: What are the latest developments in AI agents in 2026?"
     ),
-    height=120,
+
+    height=135,
+
     label_visibility="collapsed",
 )
 
 
-col1, col2, col3 = st.columns([1, 1, 2])
+# =========================================================
+# START BUTTON
+# =========================================================
 
-with col1:
-
-    start = st.button(
-        "🚀 Start Research",
-        type="primary",
-    )
-
-with col3:
-
-    st.markdown(
-        """
-        <div style="
-            color:#71869d;
-            font-size:12px;
-            padding-top:10px;
-        ">
-            The team will search, verify, analyze and write.
-        </div>
-        """,
-        unsafe_allow_html=True,
-    )
+start = st.button(
+    "🚀 Start Research",
+    type="primary",
+)
 
 
 # =========================================================
-# RESEARCH EXECUTION
+# EXECUTE RESEARCH
 # =========================================================
 
 if start:
@@ -516,37 +776,40 @@ if start:
 
         st.stop()
 
-    # Reset agent states
+
+    # -----------------------------------------------------
+    # Reset status
+    # -----------------------------------------------------
+
     st.session_state.agent_states = {
-        name: "waiting"
-        for name in AGENTS
+        agent: "waiting"
+        for agent in AGENTS
     }
 
     st.session_state.current_agent = None
 
-    status_placeholder = st.empty()
 
-    status_placeholder.markdown(
+    # -----------------------------------------------------
+    # Current agent placeholder
+    # -----------------------------------------------------
+
+    current_placeholder = st.empty()
+
+
+    current_placeholder.markdown(
         """
-        <div class="agent-panel">
+        <div class="current-agent">
 
-            <div class="agent-title">
-                Live Research Team
+            <div class="current-label">
+                Research Team
             </div>
 
-            <div style="
-                font-size:22px;
-                font-weight:800;
-                margin-bottom:6px;
-            ">
-                🟡 Preparing the research team...
+            <div class="current-title">
+                🟡 Preparing agents...
             </div>
 
-            <div style="
-                color:#8fa3ba;
-                font-size:14px;
-            ">
-                Initializing the agents and research tools.
+            <div class="current-description">
+                Initializing the research workflow.
             </div>
 
         </div>
@@ -554,17 +817,21 @@ if start:
         unsafe_allow_html=True,
     )
 
+
     try:
 
-        # The callback identifies which agent is currently active.
-        callback = make_step_callback(
-            "Researcher",
-            status_placeholder,
-        )
+        # -------------------------------------------------
+        # Build crew
+        # -------------------------------------------------
 
         crew = build_crew(
-            step_callback=callback,
+            status_callback=research_status_callback
         )
+
+
+        # -------------------------------------------------
+        # Run crew
+        # -------------------------------------------------
 
         result = crew.kickoff(
             inputs={
@@ -572,37 +839,44 @@ if start:
             }
         )
 
-        # Mark all agents complete.
-        for name in AGENTS:
-            st.session_state.agent_states[name] = "complete"
 
-        status_placeholder.markdown(
+        # -------------------------------------------------
+        # Complete
+        # -------------------------------------------------
+
+        for agent in AGENTS:
+
+            st.session_state.agent_states[agent] = "complete"
+
+
+        st.session_state.current_agent = None
+
+
+        current_placeholder.markdown(
             """
-            <div class="agent-panel">
+            <div class="current-agent">
 
-                <div class="agent-title">
+                <div class="current-label">
                     Research Complete
                 </div>
 
-                <div style="
-                    font-size:22px;
-                    font-weight:800;
-                    margin-bottom:6px;
-                ">
-                    🟢 Research team finished
+                <div class="current-title">
+                    🟢 Your report is ready
                 </div>
 
-                <div style="
-                    color:#8fa3ba;
-                    font-size:14px;
-                ">
-                    Your report is ready below.
+                <div class="current-description">
+                    The research team completed all four stages.
                 </div>
 
             </div>
             """,
             unsafe_allow_html=True,
         )
+
+
+        # -------------------------------------------------
+        # Result
+        # -------------------------------------------------
 
         st.markdown(
             """
@@ -613,7 +887,7 @@ if start:
                 </div>
 
                 <div class="source-badge">
-                    ✓ Multi-agent verified
+                    ✓ Multi-agent research
                 </div>
 
             </div>
@@ -621,16 +895,24 @@ if start:
             unsafe_allow_html=True,
         )
 
-        st.markdown(str(result))
 
-    except Exception as exc:
+        st.markdown(
+            str(result)
+        )
+
+
+    except Exception as error:
+
+        current_placeholder.empty()
 
         st.error(
             "The research team encountered an error."
         )
 
-        with st.expander("Technical details"):
+        with st.expander(
+            "🔧 Technical error details"
+        ):
 
             st.code(
-                str(exc)
+                str(error)
             )
