@@ -1,4 +1,5 @@
 import streamlit as st
+import traceback
 
 from crew import build_crew
 
@@ -23,10 +24,6 @@ st.markdown(
     """
     <style>
 
-    /* ==============================================
-       MAIN APPLICATION
-       ============================================== */
-
     .stApp {
         background:
             radial-gradient(
@@ -42,17 +39,11 @@ st.markdown(
             #07111f;
     }
 
-
     .block-container {
         max-width: 1180px;
         padding-top: 2rem;
         padding-bottom: 4rem;
     }
-
-
-    /* ==============================================
-       BRAND
-       ============================================== */
 
     .brand {
         display: flex;
@@ -61,31 +52,24 @@ st.markdown(
         margin-bottom: 8px;
     }
 
-
     .brand-icon {
         width: 48px;
         height: 48px;
-
         border-radius: 15px;
-
         display: flex;
         align-items: center;
         justify-content: center;
-
         font-size: 24px;
-
         background:
             linear-gradient(
                 135deg,
                 #38bdf8,
                 #6366f1
             );
-
         box-shadow:
             0 0 30px
             rgba(56, 189, 248, 0.25);
     }
-
 
     .brand-title {
         font-size: 30px;
@@ -93,54 +77,38 @@ st.markdown(
         letter-spacing: -1px;
     }
 
-
     .brand-subtitle {
         color: #8fa3ba;
         font-size: 14px;
         margin-top: 2px;
     }
 
-
-    /* ==============================================
-       HERO
-       ============================================== */
-
     .hero {
         padding: 38px;
-
         margin-top: 24px;
         margin-bottom: 24px;
-
         border-radius: 26px;
-
         background:
             linear-gradient(
                 135deg,
                 rgba(15, 31, 51, 0.97),
                 rgba(9, 22, 39, 0.97)
             );
-
         border:
             1px solid
             rgba(148, 163, 184, 0.12);
-
         box-shadow:
             0 20px 70px
             rgba(0, 0, 0, 0.25);
     }
 
-
     .hero-title {
         font-size: 42px;
         line-height: 1.05;
-
         font-weight: 850;
-
         letter-spacing: -1.8px;
-
         margin-bottom: 14px;
     }
-
 
     .gradient-text {
         background:
@@ -150,339 +118,190 @@ st.markdown(
                 #60a5fa,
                 #a78bfa
             );
-
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
     }
 
-
     .hero-description {
         color: #9fb1c5;
-
         font-size: 16px;
-
         line-height: 1.7;
-
         max-width: 760px;
     }
-
-
-    /* ==============================================
-       PIPELINE
-       ============================================== */
 
     .pipeline {
         display: flex;
         align-items: center;
-
         gap: 8px;
-
         margin: 22px 0;
     }
 
-
     .pipeline-step {
         flex: 1;
-
         padding: 13px 10px;
-
         text-align: center;
-
         border-radius: 14px;
-
         background:
             rgba(12, 28, 47, 0.75);
-
         border:
             1px solid
             rgba(148, 163, 184, 0.09);
-
         color: #71869d;
-
         font-size: 12px;
-
         font-weight: 650;
     }
-
 
     .pipeline-arrow {
         color: #475569;
     }
 
-
-    /* ==============================================
-       AGENT PANEL
-       ============================================== */
-
-    .agent-panel {
-        padding: 20px;
-
-        border-radius: 20px;
-
-        background:
-            rgba(12, 28, 47, 0.82);
-
-        border:
-            1px solid
-            rgba(148, 163, 184, 0.10);
-
-        margin-bottom: 20px;
-    }
-
-
-    .agent-panel-title {
-        font-size: 12px;
-
-        font-weight: 750;
-
-        color: #8fa3ba;
-
-        text-transform: uppercase;
-
-        letter-spacing: 1px;
-
-        margin-bottom: 16px;
-    }
-
-
     .agent-row {
         display: flex;
-
         align-items: center;
-
         gap: 12px;
-
         padding: 11px 0;
-
         border-bottom:
             1px solid
             rgba(148, 163, 184, 0.07);
     }
 
-
     .agent-row:last-child {
         border-bottom: none;
     }
 
-
     .agent-dot {
         width: 9px;
         height: 9px;
-
         border-radius: 50%;
-
         flex-shrink: 0;
     }
 
-
     .dot-active {
         background: #38bdf8;
-
         box-shadow:
             0 0 14px
             rgba(56, 189, 248, 0.9);
     }
 
-
     .dot-complete {
         background: #34d399;
     }
-
 
     .dot-waiting {
         background: #475569;
     }
 
-
     .agent-name {
         font-weight: 650;
-
         color: #e5edf7;
     }
 
-
     .agent-status {
         margin-left: auto;
-
         color: #71869d;
-
         font-size: 12px;
     }
 
-
-    /* ==============================================
-       CURRENT AGENT
-       ============================================== */
-
     .current-agent {
         padding: 22px;
-
         border-radius: 20px;
-
         margin-bottom: 20px;
-
         background:
             linear-gradient(
                 135deg,
                 rgba(14, 165, 233, 0.10),
                 rgba(99, 102, 241, 0.10)
             );
-
         border:
             1px solid
             rgba(56, 189, 248, 0.18);
-
         box-shadow:
             0 12px 40px
             rgba(0, 0, 0, 0.12);
     }
 
-
     .current-label {
         font-size: 11px;
-
         color: #67e8f9;
-
         text-transform: uppercase;
-
         letter-spacing: 1.2px;
-
         font-weight: 800;
-
         margin-bottom: 8px;
     }
 
-
     .current-title {
         font-size: 22px;
-
         font-weight: 800;
-
         margin-bottom: 5px;
     }
 
-
     .current-description {
         color: #8fa3ba;
-
         font-size: 13px;
     }
 
-
-    /* ==============================================
-       BUTTON
-       ============================================== */
-
     .stButton > button {
-
         width: 100%;
-
         border: none;
-
         border-radius: 14px;
-
         padding: 13px 20px;
-
         font-weight: 750;
-
         color: white;
-
         background:
             linear-gradient(
                 135deg,
                 #0ea5e9,
                 #6366f1
             );
-
         box-shadow:
             0 12px 28px
             rgba(37, 99, 235, 0.22);
-
         transition:
             transform 0.2s ease,
             box-shadow 0.2s ease;
     }
 
-
     .stButton > button:hover {
-
-        transform:
-            translateY(-1px);
-
+        transform: translateY(-1px);
         box-shadow:
             0 16px 34px
             rgba(37, 99, 235, 0.30);
     }
 
-
-    /* ==============================================
-       TEXT AREA
-       ============================================== */
-
     textarea {
         border-radius: 16px !important;
     }
 
-
-    /* ==============================================
-       RESULT
-       ============================================== */
-
     .result-header {
-
         display: flex;
-
         justify-content: space-between;
-
         align-items: center;
-
-        margin:
-            28px 0 15px;
+        margin: 28px 0 15px;
     }
 
-
     .result-title {
-
         font-size: 26px;
-
         font-weight: 800;
     }
 
-
     .source-badge {
-
-        padding:
-            7px 12px;
-
+        padding: 7px 12px;
         border-radius: 999px;
-
         font-size: 12px;
-
         color: #bae6fd;
-
         background:
             rgba(14, 165, 233, 0.10);
-
         border:
             1px solid
             rgba(56, 189, 248, 0.16);
     }
 
-
-    /* ==============================================
-       SIDEBAR
-       ============================================== */
-
     section[data-testid="stSidebar"] {
-
-        background:
-            #081522;
-
+        background: #081522;
         border-right:
             1px solid
             rgba(148, 163, 184, 0.08);
     }
-
 
     </style>
     """,
@@ -491,7 +310,7 @@ st.markdown(
 
 
 # =========================================================
-# SESSION STATE
+# AGENTS
 # =========================================================
 
 AGENTS = [
@@ -502,8 +321,11 @@ AGENTS = [
 ]
 
 
-if "agent_states" not in st.session_state:
+# =========================================================
+# SESSION STATE
+# =========================================================
 
+if "agent_states" not in st.session_state:
     st.session_state.agent_states = {
         agent: "waiting"
         for agent in AGENTS
@@ -511,39 +333,52 @@ if "agent_states" not in st.session_state:
 
 
 if "current_agent" not in st.session_state:
-
     st.session_state.current_agent = None
 
 
 # =========================================================
-# AGENT CALLBACK
+# SAFE AGENT CALLBACK
 # =========================================================
 
-def research_status_callback(agent_name):
-
+def research_status_callback(agent):
     """
-    CrewAI calls this whenever an agent performs a step.
-
-    We use it to remember which agent is currently active.
+    CrewAI may send either an agent name or an Agent object.
+    This function safely handles both.
     """
 
-    st.session_state.current_agent = agent_name
+    # Try to get the agent's role
+    agent_name = getattr(agent, "role", None)
 
-    current_index = AGENTS.index(agent_name)
+    # If there is no role, convert the object to text
+    if not agent_name:
+        agent_name = str(agent)
 
-    for index, agent in enumerate(AGENTS):
+    # Find the closest known agent
+    matched_agent = None
+
+    for known_agent in AGENTS:
+        if known_agent.lower() in agent_name.lower():
+            matched_agent = known_agent
+            break
+
+    # If the agent cannot be matched, don't crash the whole app
+    if matched_agent is None:
+        return
+
+    st.session_state.current_agent = matched_agent
+
+    current_index = AGENTS.index(matched_agent)
+
+    for index, agent_name in enumerate(AGENTS):
 
         if index < current_index:
-
-            st.session_state.agent_states[agent] = "complete"
+            st.session_state.agent_states[agent_name] = "complete"
 
         elif index == current_index:
-
-            st.session_state.agent_states[agent] = "active"
+            st.session_state.agent_states[agent_name] = "active"
 
         else:
-
-            st.session_state.agent_states[agent] = "waiting"
+            st.session_state.agent_states[agent_name] = "waiting"
 
 
 # =========================================================
@@ -582,17 +417,14 @@ with st.sidebar:
         state = st.session_state.agent_states[agent]
 
         if state == "active":
-
             dot_class = "dot-active"
             status = "Working"
 
         elif state == "complete":
-
             dot_class = "dot-complete"
             status = "Complete"
 
         else:
-
             dot_class = "dot-waiting"
             status = "Waiting"
 
@@ -617,17 +449,9 @@ with st.sidebar:
 
     st.markdown("---")
 
-    st.caption(
-        "LLM: Groq GPT-OSS 120B"
-    )
-
-    st.caption(
-        "Framework: CrewAI"
-    )
-
-    st.caption(
-        "Search: Tavily"
-    )
+    st.caption("LLM: Groq GPT-OSS 120B")
+    st.caption("Framework: CrewAI")
+    st.caption("Search: Tavily")
 
 
 # =========================================================
@@ -778,7 +602,7 @@ if start:
 
 
     # -----------------------------------------------------
-    # Reset status
+    # Reset agent status
     # -----------------------------------------------------
 
     st.session_state.agent_states = {
@@ -818,20 +642,16 @@ if start:
     )
 
 
-    try:
+    # -----------------------------------------------------
+    # Run research
+    # -----------------------------------------------------
 
-        # -------------------------------------------------
-        # Build crew
-        # -------------------------------------------------
+    try:
 
         crew = build_crew(
             status_callback=research_status_callback
         )
 
-
-        # -------------------------------------------------
-        # Run crew
-        # -------------------------------------------------
 
         result = crew.kickoff(
             inputs={
@@ -841,16 +661,18 @@ if start:
 
 
         # -------------------------------------------------
-        # Complete
+        # Mark all agents complete
         # -------------------------------------------------
 
         for agent in AGENTS:
-
             st.session_state.agent_states[agent] = "complete"
-
 
         st.session_state.current_agent = None
 
+
+        # -------------------------------------------------
+        # Completion message
+        # -------------------------------------------------
 
         current_placeholder.markdown(
             """
@@ -875,7 +697,7 @@ if start:
 
 
         # -------------------------------------------------
-        # Result
+        # Result header
         # -------------------------------------------------
 
         st.markdown(
@@ -896,23 +718,65 @@ if start:
         )
 
 
-        st.markdown(
-            str(result)
-        )
+        # -------------------------------------------------
+        # Display result
+        # -------------------------------------------------
+
+        st.markdown(str(result))
 
 
     except Exception as error:
 
-        current_placeholder.empty()
+        # -----------------------------------------------
+        # Reset active agent
+        # -----------------------------------------------
+
+        st.session_state.current_agent = None
+
+
+        current_placeholder.markdown(
+            """
+            <div class="current-agent">
+
+                <div class="current-label">
+                    Research Error
+                </div>
+
+                <div class="current-title">
+                    🔴 The research workflow failed
+                </div>
+
+                <div class="current-description">
+                    See the technical details below.
+                </div>
+
+            </div>
+            """,
+            unsafe_allow_html=True,
+        )
+
+
+        # -----------------------------------------------
+        # User-friendly error
+        # -----------------------------------------------
 
         st.error(
             "The research team encountered an error."
         )
 
+
+        # -----------------------------------------------
+        # Show actual error
+        # -----------------------------------------------
+
         with st.expander(
-            "🔧 Technical error details"
+            "🔧 Technical error details",
+            expanded=True,
         ):
 
+            st.error(str(error))
+
             st.code(
-                str(error)
+                traceback.format_exc(),
+                language="text",
             )
