@@ -1,9 +1,3 @@
-
-Those **must not be inside the Python file**. Also, everything inside `build_crew()` must be indented.
-
-Replace your **entire `crew.py`** with the following. **Copy only the code inside the writing block, not the ``` markers.**
-
-:::writing{variant="document" id="69427" title="Corrected crew.py"}
 import os
 
 from crewai import Crew, LLM, Process, Task
@@ -14,298 +8,266 @@ from fact_checker import create_fact_checker
 from analyst import create_analyst
 from writer import create_writer
 
-
 MODEL_NAME = "groq/openai/gpt-oss-120b"
 
-
 def build_crew(status_callback=None):
 
-    # Check API keys
-
-    if not os.getenv("GROQ_API_KEY"):
-        raise ValueError(
-            "GROQ_API_KEY is missing. Add it in Streamlit Secrets."
-        )
-
-    if not os.getenv("TAVILY_API_KEY"):
-        raise ValueError(
-            "TAVILY_API_KEY is missing. Add it in Streamlit Secrets."
-        )
-
-    # Groq LLM
-
-    llm = LLM(
-        model=MODEL_NAME,
-        temperature=0.2,
-        max_completion_tokens=4096,
+```
+if not os.getenv("GROQ_API_KEY"):
+    raise ValueError(
+        "GROQ_API_KEY is missing. Add it in Streamlit Secrets."
     )
 
-    # Research tools
-
-    search_tool = TavilySearchTool()
-    scrape_tool = ScrapeWebsiteTool()
-
-    research_tools = [
-        search_tool,
-        scrape_tool,
-    ]
-
-    # Agents
-
-    researcher = create_researcher(
-        llm=llm,
-        tools=research_tools,
-        step_callback=status_callback,
+if not os.getenv("TAVILY_API_KEY"):
+    raise ValueError(
+        "TAVILY_API_KEY is missing. Add it in Streamlit Secrets."
     )
 
-    fact_checker = create_fact_checker(
-        llm=llm,
-        tools=research_tools,
-        step_callback=status_callback,
-    )
-
-    analyst = create_analyst(
-        llm=llm,
-        step_callback=status_callback,
-    )
-
-    writer = create_writer(
-        llm=llm,
-        step_callback=status_callback,
-    )
+llm = LLM(
+    model=MODEL_NAME,
+    temperature=0.2,
+    max_completion_tokens=4096,
+)
+
+search_tool = TavilySearchTool()
+scrape_tool = ScrapeWebsiteTool()
+
+research_tools = [
+    search_tool,
+    scrape_tool,
+]
+
+researcher = create_researcher(
+    llm=llm,
+    tools=research_tools,
+    step_callback=status_callback,
+)
+
+fact_checker = create_fact_checker(
+    llm=llm,
+    tools=research_tools,
+    step_callback=status_callback,
+)
+
+analyst = create_analyst(
+    llm=llm,
+    step_callback=status_callback,
+)
+
+writer = create_writer(
+    llm=llm,
+    step_callback=status_callback,
+)
 
-    # Task 1 — Research
-
-    research_task = Task(
-        description="""
-        Research the following question:
+research_task = Task(
+    description="""
+    Research the following question:
 
-        {question}
+    {question}
+
+    Find accurate and recent information from reliable
+    web sources.
 
-        Your job is to collect reliable evidence from the web.
+    Prefer primary sources, official documentation,
+    academic research, reputable organizations, and
+    high-quality journalism.
 
-        Requirements:
+    Collect important facts, dates, numbers, evidence,
+    source names, and source URLs.
 
-        1. Search for relevant information.
-        2. Prefer recent information when the topic requires it.
-        3. Prefer primary and authoritative sources.
-        4. Use reputable secondary sources when useful.
-        5. Collect important facts, dates and numbers.
-        6. Record source names and URLs.
-        7. Identify conflicting information.
-        8. Do not invent facts or sources.
+    Identify conflicting or uncertain information.
+
+    Do not invent facts or sources.
+    """,
+
+    expected_output="""
+    Detailed research notes containing:
+
+    - Key findings
+    - Important facts
+    - Dates
+    - Numbers
+    - Evidence
+    - Source names
+    - Source URLs
+    - Conflicting or uncertain information
+    """,
+
+    agent=researcher,
+)
+
+fact_check_task = Task(
+    description="""
+    Fact-check the research produced by the researcher.
 
-        Produce detailed research notes that another agent
-        can fact-check.
-        """,
+    Research question:
 
-        expected_output="""
-        A detailed research package containing:
+    {question}
 
-        - Key findings
-        - Important facts
-        - Dates
-        - Numbers
-        - Relevant evidence
-        - Source names
-        - Source URLs
-        - Conflicting or uncertain information
-        """,
+    Independently verify important claims using web
+    search and scraping tools.
 
-        agent=researcher,
-    )
+    Pay special attention to:
 
-    # Task 2 — Fact Check
-
-    fact_check_task = Task(
-        description="""
-        Fact-check the research produced by the researcher.
+    - Numbers
+    - Dates
+    - Recent developments
+    - Important claims
+    - Unsupported statements
+    - Contradictory information
+    - Outdated information
+    - Source quality
 
-        Research question:
+    Classify claims as:
 
-        {question}
+    VERIFIED
+    PARTIALLY VERIFIED
+    CONTRADICTED
+    UNSUPPORTED
+    OUTDATED
 
-        Do NOT simply trust the researcher's information.
+    Explain the evidence behind each assessment.
+    """,
 
-        Independently verify important claims using your
-        web search and scraping tools.
+    expected_output="""
+    A structured fact-checking report containing:
 
-        Pay special attention to:
+    - Claim
+    - Verification status
+    - Evidence
+    - Source
+    - URL
+    - Important uncertainty
+    """,
 
-        - Numbers
-        - Dates
-        - Recent developments
-        - Important claims
-        - Unsupported statements
-        - Contradictory information
-        - Outdated information
-        - Source quality
+    agent=fact_checker,
 
-        Classify important claims as:
+    context=[
+        research_task,
+    ],
+)
 
-        VERIFIED
-        PARTIALLY VERIFIED
-        CONTRADICTED
-        UNSUPPORTED
-        OUTDATED
+analysis_task = Task(
+    description="""
+    Analyze the research and fact-checking results.
 
-        Explain the evidence behind your assessment.
-        """,
+    Research question:
 
-        expected_output="""
-        A structured fact-checking report containing:
+    {question}
 
-        - Claim
-        - Verification status
-        - Evidence
-        - Source
-        - URL
-        - Important uncertainty
-        """,
+    Focus on verified information.
 
-        agent=fact_checker,
+    Identify:
 
-        context=[
-            research_task,
-        ],
-    )
+    - Main findings
+    - Important comparisons
+    - Patterns and trends
+    - Conflicting evidence
+    - Limitations
+    - Research gaps
 
-    # Task 3 — Analysis
+    Do not treat unsupported claims as facts.
+    Do not invent missing information.
+    """,
 
-    analysis_task = Task(
-        description="""
-        Analyze the research and fact-checking results.
+    expected_output="""
+    A structured analytical brief containing:
 
-        Research question:
+    1. Main findings
+    2. Supporting evidence
+    3. Important comparisons
+    4. Conflicting evidence
+    5. Limitations
+    6. Research gaps
+    7. Important points for the final report
+    """,
 
-        {question}
+    agent=analyst,
 
-        Use the evidence from the previous agents.
+    context=[
+        research_task,
+        fact_check_task,
+    ],
+)
 
-        Requirements:
+writing_task = Task(
+    description="""
+    Write the final research report.
 
-        - Focus on verified information.
-        - Do not treat unsupported claims as facts.
-        - Identify the strongest findings.
-        - Compare important evidence.
-        - Identify patterns and trends.
-        - Explain conflicting evidence.
-        - Identify limitations.
-        - Identify research gaps.
-        - Do not invent missing information.
+    Research question:
 
-        Produce an analytical brief for the final writer.
-        """,
+    {question}
 
-        expected_output="""
-        A structured analytical brief containing:
+    Use the research, fact-checking, and analysis
+    produced by the previous agents.
 
-        1. Main findings
-        2. Evidence supporting the findings
-        3. Important comparisons
-        4. Conflicting evidence
-        5. Limitations
-        6. Research gaps
-        7. Important points for the final report
-        """,
+    Create a professional Markdown report.
 
-        agent=analyst,
+    Structure:
 
-        context=[
-            research_task,
-            fact_check_task,
-        ],
-    )
+    # Research Title
 
-    # Task 4 — Writing
+    ## Executive Summary
 
-    writing_task = Task(
-        description="""
-        Write the final research report.
+    ## Key Findings
 
-        Research question:
+    ## Detailed Analysis
 
-        {question}
+    ## Evidence and Sources
 
-        Use the research, fact-checking and analysis
-        produced by the previous agents.
+    ## Limitations
 
-        Create a professional Markdown report.
+    ## Conclusion
 
-        Structure:
+    ## Sources
 
-        # Research Title
+    Requirements:
 
-        ## Executive Summary
+    - Be factual.
+    - Be clear.
+    - Be balanced.
+    - Preserve uncertainty.
+    - Do not fabricate information.
+    - Do not fabricate citations.
+    - Do not fabricate URLs.
+    - Do not invent quotations.
+    - Use Markdown formatting.
+    - Include source URLs when available.
+    """,
 
-        ## Key Findings
+    expected_output="""
+    A polished Markdown research report ready to
+    display in the Streamlit application.
+    """,
 
-        ## Detailed Analysis
+    agent=writer,
 
-        ## Evidence and Sources
+    context=[
+        research_task,
+        fact_check_task,
+        analysis_task,
+    ],
+)
 
-        ## Limitations
+crew = Crew(
+    agents=[
+        researcher,
+        fact_checker,
+        analyst,
+        writer,
+    ],
 
-        ## Conclusion
+    tasks=[
+        research_task,
+        fact_check_task,
+        analysis_task,
+        writing_task,
+    ],
 
-        ## Sources
+    process=Process.sequential,
 
-        Requirements:
+    verbose=False,
+)
 
-        - Be factual.
-        - Be clear.
-        - Be balanced.
-        - Preserve important uncertainty.
-        - Do not fabricate information.
-        - Do not fabricate citations.
-        - Do not fabricate URLs.
-        - Do not invent quotations.
-        - Use Markdown formatting.
-        - Include source URLs when available.
-        """,
-
-        expected_output="""
-        A polished Markdown research report ready to
-        display in the Streamlit application.
-        """,
-
-        agent=writer,
-
-        context=[
-            research_task,
-            fact_check_task,
-            analysis_task,
-        ],
-    )
-
-    # Crew
-
-    crew = Crew(
-        agents=[
-            researcher,
-            fact_checker,
-            analyst,
-            writer,
-        ],
-
-        tasks=[
-            research_task,
-            fact_check_task,
-            analysis_task,
-            writing_task,
-        ],
-
-        process=Process.sequential,
-
-        verbose=False,
-    )
-
-    return crew
-:::
-
-### Important
-
-Your previous file had:
-
-```text
-def build_crew(status_callback=None):
+return crew
+```
