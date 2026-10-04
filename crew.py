@@ -19,21 +19,18 @@ MODEL_NAME = "groq/openai/gpt-oss-120b"
 def build_crew(status_callback=None):
 
     if not os.getenv("GROQ_API_KEY"):
-        raise ValueError(
-            "GROQ_API_KEY is missing. Add it in Streamlit Secrets."
-        )
+        raise ValueError("GROQ_API_KEY is missing.")
 
     if not os.getenv("TAVILY_API_KEY"):
-        raise ValueError(
-            "TAVILY_API_KEY is missing. Add it in Streamlit Secrets."
-        )
+        raise ValueError("TAVILY_API_KEY is missing.")
 
     llm = LLM(
         model=MODEL_NAME,
         temperature=0.2,
-        max_completion_tokens=900,
+        max_completion_tokens=700,
     )
 
+    # Only the Researcher uses web search.
     search_tool = TavilySearchTool()
 
     researcher = create_researcher(
@@ -42,9 +39,10 @@ def build_crew(status_callback=None):
         step_callback=status_callback,
     )
 
+    # Fact checker does NOT search again.
     fact_checker = create_fact_checker(
         llm=llm,
-        tools=[search_tool],
+        tools=[],
         step_callback=status_callback,
     )
 
@@ -64,22 +62,22 @@ Research this question:
 
 {question}
 
-Find the most important recent facts.
+Use web search to find the most important and recent information.
 
-Use reliable sources and focus only on information needed to answer
-the question.
-
-Return a concise research brief with:
-- Key findings
+Focus on:
+- Key facts
 - Important evidence
-- Important dates or numbers
-- Source names
-- Source URLs
+- Recent developments
+- Important numbers or dates
+- Reliable sources
 
-Do not invent information.
+Return a concise research brief.
+
+Do not invent facts or sources.
 """,
         expected_output="""
-A concise research brief of approximately 500 words maximum.
+A concise research brief containing key findings,
+evidence, source names, and URLs.
 """,
         agent=researcher,
     )
@@ -91,30 +89,24 @@ Fact-check the research brief below.
 Question:
 {question}
 
-Research brief:
+Research:
 {research_task}
 
-Verify the most important claims using web search.
+Review the claims using the information provided.
 
-Focus on:
-- Important facts
-- Numbers
-- Dates
-- Recent claims
-- Source reliability
+Identify:
+- VERIFIED claims
+- PARTIALLY VERIFIED claims
+- UNSUPPORTED claims
+- OUTDATED or uncertain information
 
-For each important claim, classify it as:
-VERIFIED
-PARTIALLY VERIFIED
-CONTRADICTED
-UNSUPPORTED
-OUTDATED
+Do not invent new facts.
 
-Keep the report concise.
+Keep the response short.
 """,
         expected_output="""
-A concise fact-check report of approximately 400 words maximum.
-Include claim, status, evidence, and source URL where available.
+A concise fact-check report listing the most important
+claims and their verification status.
 """,
         agent=fact_checker,
         context=[research_task],
@@ -122,7 +114,7 @@ Include claim, status, evidence, and source URL where available.
 
     analysis_task = Task(
         description="""
-Analyze the research and fact-checking results.
+Analyze the research and fact-check report.
 
 Question:
 {question}
@@ -133,19 +125,17 @@ Research:
 Fact check:
 {fact_check_task}
 
-Focus only on verified or reasonably supported information.
-
-Identify:
+Focus on:
 - Main findings
 - Important patterns
 - Useful comparisons
-- Important limitations
-- Research gaps
+- Limitations
 
-Do not invent information.
+Use only information supported by the previous work.
 """,
         expected_output="""
-A concise analytical brief of approximately 350 words maximum.
+A concise analytical summary of the main findings,
+patterns, comparisons, and limitations.
 """,
         agent=analyst,
         context=[
@@ -170,9 +160,7 @@ Fact check:
 Analysis:
 {analysis_task}
 
-Create a professional Markdown report.
-
-Use this structure:
+Create a concise Markdown report with:
 
 # Research Title
 
@@ -188,16 +176,10 @@ Use this structure:
 
 ## Sources
 
-Rules:
-- Use only supported information.
-- Preserve uncertainty.
-- Do not invent facts.
-- Do not invent citations.
-- Do not invent URLs.
-- Keep the report concise.
+Do not invent facts, citations, or URLs.
 """,
         expected_output="""
-A polished Markdown research report of approximately 700 words maximum.
+A polished Markdown research report.
 """,
         agent=writer,
         context=[
