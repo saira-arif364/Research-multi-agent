@@ -27,7 +27,7 @@ def build_crew(status_callback=None):
     llm = LLM(
         model=MODEL_NAME,
         temperature=0.2,
-        max_completion_tokens=700,
+        max_completion_tokens=300,
     )
 
     # Only the Researcher searches the web.
