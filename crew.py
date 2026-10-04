@@ -5,7 +5,7 @@ _crewai_cache.mark_cache_breakpoint = lambda msg: msg
 import os
 
 from crewai import Crew, LLM, Process, Task
-from crewai_tools import TavilySearchTool, ScrapeWebsiteTool
+from crewai_tools import TavilySearchTool
 
 from researcher import create_researcher
 from fact_checker import create_fact_checker
@@ -31,26 +31,20 @@ def build_crew(status_callback=None):
     llm = LLM(
         model=MODEL_NAME,
         temperature=0.2,
-        max_completion_tokens=1500,
+        max_completion_tokens=900,
     )
 
     search_tool = TavilySearchTool()
-    scrape_tool = ScrapeWebsiteTool()
-
-    research_tools = [
-        search_tool,
-        scrape_tool,
-    ]
 
     researcher = create_researcher(
         llm=llm,
-        tools=research_tools,
+        tools=[search_tool],
         step_callback=status_callback,
     )
 
     fact_checker = create_fact_checker(
         llm=llm,
-        tools=research_tools,
+        tools=[search_tool],
         step_callback=status_callback,
     )
 
@@ -66,128 +60,94 @@ def build_crew(status_callback=None):
 
     research_task = Task(
         description="""
-        Research the following question:
+Research this question:
 
-        {question}
+{question}
 
-        Find accurate and recent information from reliable
-        web sources.
+Find the most important recent facts.
 
-        Prefer primary sources, official documentation,
-        academic research, reputable organizations, and
-        high-quality journalism.
+Use reliable sources and focus only on information needed to answer
+the question.
 
-        Collect important facts, dates, numbers, evidence,
-        source names, and source URLs.
+Return a concise research brief with:
+- Key findings
+- Important evidence
+- Important dates or numbers
+- Source names
+- Source URLs
 
-        Identify conflicting or uncertain information.
-
-        Do not invent facts or sources.
-        """,
-
+Do not invent information.
+""",
         expected_output="""
-        Detailed research notes containing:
-
-        - Key findings
-        - Important facts
-        - Dates
-        - Numbers
-        - Evidence
-        - Source names
-        - Source URLs
-        - Conflicting or uncertain information
-        """,
-
+A concise research brief of approximately 500 words maximum.
+""",
         agent=researcher,
     )
 
     fact_check_task = Task(
         description="""
-        Fact-check the research produced by the researcher.
+Fact-check the research brief below.
 
-        Research question:
+Question:
+{question}
 
-        {question}
+Research brief:
+{research_task}
 
-        Independently verify the most important claims
-        using web search and scraping tools.
+Verify the most important claims using web search.
 
-        Pay special attention to:
+Focus on:
+- Important facts
+- Numbers
+- Dates
+- Recent claims
+- Source reliability
 
-        - Numbers
-        - Dates
-        - Recent developments
-        - Important claims
-        - Unsupported statements
-        - Contradictory information
-        - Outdated information
-        - Source quality
+For each important claim, classify it as:
+VERIFIED
+PARTIALLY VERIFIED
+CONTRADICTED
+UNSUPPORTED
+OUTDATED
 
-        Classify claims as:
-
-        VERIFIED
-        PARTIALLY VERIFIED
-        CONTRADICTED
-        UNSUPPORTED
-        OUTDATED
-
-        Explain the evidence behind each assessment.
-        """,
-
+Keep the report concise.
+""",
         expected_output="""
-        A concise fact-checking report containing:
-
-        - Important claim
-        - Verification status
-        - Evidence
-        - Source
-        - URL
-        - Important uncertainty
-        """,
-
+A concise fact-check report of approximately 400 words maximum.
+Include claim, status, evidence, and source URL where available.
+""",
         agent=fact_checker,
-
-        context=[
-            research_task,
-        ],
+        context=[research_task],
     )
 
     analysis_task = Task(
         description="""
-        Analyze the research and fact-checking results.
+Analyze the research and fact-checking results.
 
-        Research question:
+Question:
+{question}
 
-        {question}
+Research:
+{research_task}
 
-        Focus on verified information.
+Fact check:
+{fact_check_task}
 
-        Identify:
+Focus only on verified or reasonably supported information.
 
-        - Main findings
-        - Important comparisons
-        - Patterns and trends
-        - Conflicting evidence
-        - Limitations
-        - Research gaps
+Identify:
+- Main findings
+- Important patterns
+- Useful comparisons
+- Important limitations
+- Research gaps
 
-        Do not treat unsupported claims as facts.
-        Do not invent missing information.
-        """,
-
+Do not invent information.
+""",
         expected_output="""
-        A concise analytical brief containing:
-
-        1. Main findings
-        2. Supporting evidence
-        3. Important comparisons
-        4. Conflicting evidence
-        5. Limitations
-        6. Research gaps
-        """,
-
+A concise analytical brief of approximately 350 words maximum.
+""",
         agent=analyst,
-
         context=[
             research_task,
             fact_check_task,
@@ -196,56 +156,50 @@ def build_crew(status_callback=None):
 
     writing_task = Task(
         description="""
-        Write the final research report.
+Write the final research report.
 
-        Research question:
+Question:
+{question}
 
-        {question}
+Research:
+{research_task}
 
-        Use the research, fact-checking, and analysis
-        produced by the previous agents.
+Fact check:
+{fact_check_task}
 
-        Create a professional Markdown report.
+Analysis:
+{analysis_task}
 
-        Structure:
+Create a professional Markdown report.
 
-        # Research Title
+Use this structure:
 
-        ## Executive Summary
+# Research Title
 
-        ## Key Findings
+## Executive Summary
 
-        ## Detailed Analysis
+## Key Findings
 
-        ## Evidence and Sources
+## Analysis
 
-        ## Limitations
+## Limitations
 
-        ## Conclusion
+## Conclusion
 
-        ## Sources
+## Sources
 
-        Requirements:
-
-        - Be factual.
-        - Be clear.
-        - Be balanced.
-        - Preserve uncertainty.
-        - Do not fabricate information.
-        - Do not fabricate citations.
-        - Do not fabricate URLs.
-        - Do not invent quotations.
-        - Use Markdown formatting.
-        - Include source URLs when available.
-        """,
-
+Rules:
+- Use only supported information.
+- Preserve uncertainty.
+- Do not invent facts.
+- Do not invent citations.
+- Do not invent URLs.
+- Keep the report concise.
+""",
         expected_output="""
-        A concise polished Markdown research report ready
-        to display in the Streamlit application.
-        """,
-
+A polished Markdown research report of approximately 700 words maximum.
+""",
         agent=writer,
-
         context=[
             research_task,
             fact_check_task,
@@ -260,16 +214,13 @@ def build_crew(status_callback=None):
             analyst,
             writer,
         ],
-
         tasks=[
             research_task,
             fact_check_task,
             analysis_task,
             writing_task,
         ],
-
         process=Process.sequential,
-
         verbose=False,
     )
 
