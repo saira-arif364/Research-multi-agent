@@ -30,7 +30,7 @@ def build_crew(status_callback=None):
         max_completion_tokens=700,
     )
 
-    # Only the Researcher uses web search.
+    # Only the Researcher searches the web.
     search_tool = TavilySearchTool()
 
     researcher = create_researcher(
@@ -39,7 +39,8 @@ def build_crew(status_callback=None):
         step_callback=status_callback,
     )
 
-    # Fact checker does NOT search again.
+    # Fact Checker reviews the Researcher's output.
+    # It does not perform another web search.
     fact_checker = create_fact_checker(
         llm=llm,
         tools=[],
@@ -55,6 +56,10 @@ def build_crew(status_callback=None):
         llm=llm,
         step_callback=status_callback,
     )
+
+    # =====================================================
+    # RESEARCH TASK
+    # =====================================================
 
     research_task = Task(
         description="""
@@ -77,22 +82,24 @@ Do not invent facts or sources.
 """,
         expected_output="""
 A concise research brief containing key findings,
-evidence, source names, and URLs.
+evidence, source names, and source URLs.
 """,
         agent=researcher,
     )
 
+    # =====================================================
+    # FACT CHECK TASK
+    # =====================================================
+
     fact_check_task = Task(
         description="""
-Fact-check the research brief below.
+Fact-check the research produced by the previous agent.
 
-Question:
+The research question is:
+
 {question}
 
-Research:
-{research_task}
-
-Review the claims using the information provided.
+Review the research carefully.
 
 Identify:
 - VERIFIED claims
@@ -100,42 +107,51 @@ Identify:
 - UNSUPPORTED claims
 - OUTDATED or uncertain information
 
+Pay particular attention to important facts,
+numbers, dates, and recent claims.
+
 Do not invent new facts.
 
-Keep the response short.
+Keep the response concise.
 """,
         expected_output="""
 A concise fact-check report listing the most important
 claims and their verification status.
 """,
         agent=fact_checker,
-        context=[research_task],
+        context=[
+            research_task,
+        ],
     )
+
+    # =====================================================
+    # ANALYSIS TASK
+    # =====================================================
 
     analysis_task = Task(
         description="""
-Analyze the research and fact-check report.
+Analyze the research and fact-checking results.
 
-Question:
+The research question is:
+
 {question}
 
-Research:
-{research_task}
-
-Fact check:
-{fact_check_task}
+Use the previous agents' work as your source material.
 
 Focus on:
 - Main findings
 - Important patterns
 - Useful comparisons
-- Limitations
+- Important limitations
+- Research gaps
 
 Use only information supported by the previous work.
+
+Do not invent information.
 """,
         expected_output="""
 A concise analytical summary of the main findings,
-patterns, comparisons, and limitations.
+patterns, comparisons, limitations, and research gaps.
 """,
         agent=analyst,
         context=[
@@ -144,23 +160,24 @@ patterns, comparisons, and limitations.
         ],
     )
 
+    # =====================================================
+    # WRITING TASK
+    # =====================================================
+
     writing_task = Task(
         description="""
 Write the final research report.
 
-Question:
+The research question is:
+
 {question}
 
-Research:
-{research_task}
+Use the research, fact-checking, and analysis provided
+by the previous agents.
 
-Fact check:
-{fact_check_task}
+Create a concise professional Markdown report.
 
-Analysis:
-{analysis_task}
-
-Create a concise Markdown report with:
+Use this structure:
 
 # Research Title
 
@@ -176,7 +193,13 @@ Create a concise Markdown report with:
 
 ## Sources
 
-Do not invent facts, citations, or URLs.
+Rules:
+- Use only supported information.
+- Preserve uncertainty.
+- Do not invent facts.
+- Do not invent citations.
+- Do not invent URLs.
+- Keep the report concise.
 """,
         expected_output="""
 A polished Markdown research report.
@@ -188,6 +211,10 @@ A polished Markdown research report.
             analysis_task,
         ],
     )
+
+    # =====================================================
+    # CREW
+    # =====================================================
 
     crew = Crew(
         agents=[
