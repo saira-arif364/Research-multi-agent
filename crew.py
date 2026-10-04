@@ -31,7 +31,7 @@ def build_crew(status_callback=None):
     llm = LLM(
         model=MODEL_NAME,
         temperature=0.2,
-        max_completion_tokens=4096,
+        max_completion_tokens=1500,
     )
 
     search_tool = TavilySearchTool()
@@ -84,6 +84,7 @@ def build_crew(status_callback=None):
 
         Do not invent facts or sources.
         """,
+
         expected_output="""
         Detailed research notes containing:
 
@@ -96,6 +97,7 @@ def build_crew(status_callback=None):
         - Source URLs
         - Conflicting or uncertain information
         """,
+
         agent=researcher,
     )
 
@@ -107,8 +109,8 @@ def build_crew(status_callback=None):
 
         {question}
 
-        Independently verify important claims using web
-        search and scraping tools.
+        Independently verify the most important claims
+        using web search and scraping tools.
 
         Pay special attention to:
 
@@ -131,17 +133,20 @@ def build_crew(status_callback=None):
 
         Explain the evidence behind each assessment.
         """,
-        expected_output="""
-        A structured fact-checking report containing:
 
-        - Claim
+        expected_output="""
+        A concise fact-checking report containing:
+
+        - Important claim
         - Verification status
         - Evidence
         - Source
         - URL
         - Important uncertainty
         """,
+
         agent=fact_checker,
+
         context=[
             research_task,
         ],
@@ -169,8 +174,9 @@ def build_crew(status_callback=None):
         Do not treat unsupported claims as facts.
         Do not invent missing information.
         """,
+
         expected_output="""
-        A structured analytical brief containing:
+        A concise analytical brief containing:
 
         1. Main findings
         2. Supporting evidence
@@ -178,9 +184,10 @@ def build_crew(status_callback=None):
         4. Conflicting evidence
         5. Limitations
         6. Research gaps
-        7. Important points for the final report
         """,
+
         agent=analyst,
+
         context=[
             research_task,
             fact_check_task,
@@ -231,11 +238,14 @@ def build_crew(status_callback=None):
         - Use Markdown formatting.
         - Include source URLs when available.
         """,
+
         expected_output="""
-        A polished Markdown research report ready to
-        display in the Streamlit application.
+        A concise polished Markdown research report ready
+        to display in the Streamlit application.
         """,
+
         agent=writer,
+
         context=[
             research_task,
             fact_check_task,
@@ -250,13 +260,16 @@ def build_crew(status_callback=None):
             analyst,
             writer,
         ],
+
         tasks=[
             research_task,
             fact_check_task,
             analysis_task,
             writing_task,
         ],
+
         process=Process.sequential,
+
         verbose=False,
     )
 
