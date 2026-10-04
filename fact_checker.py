@@ -2,33 +2,30 @@ from crewai import Agent
 from crewai_tools import ScrapeWebsiteTool, TavilySearchTool
 
 
-def create_fact_checker(llm, step_callback=None):
+def create_fact_checker(llm, tools=None, step_callback=None):
 
-    search_tool = TavilySearchTool()
-    scraper_tool = ScrapeWebsiteTool()
+    if tools is None:
+        tools = [
+            TavilySearchTool(),
+            ScrapeWebsiteTool(),
+        ]
 
     return Agent(
-        role="Research Fact Checker",
-
+        role="Senior Fact Checker",
         goal=(
-            "Verify important claims from the research, identify unsupported "
-            "statements, detect contradictions, and assess source quality."
+            "Verify important claims using reliable sources, identify "
+            "unsupported or inaccurate information, and clearly distinguish "
+            "verified facts from uncertainty."
         ),
-
         backstory=(
-            "You are a rigorous fact checker. "
-            "You do not automatically trust the researcher's claims. "
-            "You independently verify important facts, compare sources, "
-            "identify outdated information, and clearly flag uncertainty."
+            "You are a rigorous fact-checking specialist. "
+            "You independently verify claims using trustworthy web sources. "
+            "You pay particular attention to dates, numbers, recent developments, "
+            "source quality, contradictions, and outdated information. "
+            "You never invent evidence or citations."
         ),
-
         llm=llm,
-
-        tools=[
-            search_tool,
-            scraper_tool,
-        ],
-
+        tools=tools,
         allow_delegation=False,
         verbose=False,
         max_iter=8,
