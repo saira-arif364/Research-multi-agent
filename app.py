@@ -1,13 +1,12 @@
-import streamlit as st
 import re
-import traceback
+import streamlit as st
 
 from crew import build_crew
 
 
-# ---------------------------------------------------------
-# PAGE CONFIG
-# ---------------------------------------------------------
+# =========================================================
+# PAGE CONFIGURATION
+# =========================================================
 
 st.set_page_config(
     page_title="Research AI",
@@ -17,12 +16,16 @@ st.set_page_config(
 )
 
 
-# ---------------------------------------------------------
+# =========================================================
 # SESSION STATE
-# ---------------------------------------------------------
+# =========================================================
 
-if "current_agent" not in st.session_state:
-    st.session_state.current_agent = None
+AGENTS = [
+    "Researcher",
+    "Fact Checker",
+    "Analyst",
+    "Writer",
+]
 
 if "agent_states" not in st.session_state:
     st.session_state.agent_states = {
@@ -35,49 +38,40 @@ if "agent_states" not in st.session_state:
 if "research_result" not in st.session_state:
     st.session_state.research_result = None
 
-if "running" not in st.session_state:
-    st.session_state.running = False
+if "last_question" not in st.session_state:
+    st.session_state.last_question = ""
 
 
-AGENTS = [
-    "Researcher",
-    "Fact Checker",
-    "Analyst",
-    "Writer",
-]
-
-
-# ---------------------------------------------------------
+# =========================================================
 # CUSTOM CSS
-# ---------------------------------------------------------
+# =========================================================
 
 st.markdown(
     """
     <style>
 
-    /* Main background */
+    /* =====================================================
+       GLOBAL
+       ===================================================== */
+
     .stApp {
         background:
             radial-gradient(
-                circle at 10% 10%,
-                rgba(52, 152, 219, 0.10),
-                transparent 30%
+                circle at 8% 8%,
+                rgba(53, 217, 255, 0.09),
+                transparent 28%
             ),
             radial-gradient(
-                circle at 90% 20%,
-                rgba(155, 89, 182, 0.08),
+                circle at 92% 12%,
+                rgba(113, 101, 255, 0.09),
                 transparent 30%
             ),
             #080b12;
+
         color: #f4f7fb;
     }
 
-    /* Hide Streamlit branding */
     #MainMenu {
-        visibility: hidden;
-    }
-
-    footer {
         visibility: hidden;
     }
 
@@ -85,24 +79,32 @@ st.markdown(
         visibility: hidden;
     }
 
-    /* Main container */
+    footer {
+        visibility: hidden;
+    }
+
     .block-container {
         max-width: 1180px;
-        padding-top: 3rem;
+        padding-top: 2.8rem;
         padding-bottom: 4rem;
     }
 
-    /* Brand */
+
+    /* =====================================================
+       BRAND
+       ===================================================== */
+
     .brand {
         display: flex;
         align-items: center;
         gap: 14px;
-        margin-bottom: 8px;
+        margin-bottom: 10px;
     }
 
     .brand-icon {
         width: 48px;
         height: 48px;
+
         border-radius: 15px;
 
         display: flex;
@@ -112,44 +114,50 @@ st.markdown(
         background: linear-gradient(
             135deg,
             #35d9ff,
-            #7367ff
+            #7165ff
         );
 
         color: white;
         font-size: 25px;
-        font-weight: 700;
+        font-weight: 800;
 
         box-shadow:
-            0 0 30px rgba(53, 217, 255, 0.22);
+            0 0 32px rgba(53, 217, 255, 0.20);
     }
 
     .brand-title {
-        font-size: 31px;
-        font-weight: 750;
+        font-size: 30px;
+        font-weight: 780;
         letter-spacing: -0.7px;
+        color: #f4f7fb;
     }
 
     .brand-subtitle {
-        color: #8d99aa;
-        font-size: 14px;
+        font-size: 13px;
+        color: #7f8b9d;
         margin-top: 2px;
     }
 
-    /* Hero */
+
+    /* =====================================================
+       HERO
+       ===================================================== */
+
     .hero {
-        margin-top: 42px;
+        margin-top: 48px;
         margin-bottom: 30px;
     }
 
     .hero-title {
-        font-size: 44px;
-        line-height: 1.1;
-        font-weight: 780;
-        letter-spacing: -1.5px;
-        margin-bottom: 12px;
+        font-size: 46px;
+        line-height: 1.08;
+        font-weight: 800;
+        letter-spacing: -1.8px;
+        color: #f4f7fb;
+        margin-bottom: 15px;
     }
 
-    .hero-title span {
+    .hero-gradient {
         background: linear-gradient(
             90deg,
             #35d9ff,
@@ -160,35 +168,47 @@ st.markdown(
         -webkit-text-fill-color: transparent;
     }
 
-    .hero-text {
-        color: #98a4b5;
+    .hero-description {
+        max-width: 730px;
+        color: #96a2b4;
         font-size: 17px;
-        max-width: 720px;
         line-height: 1.65;
     }
 
-    /* Input label */
-    .input-label {
+
+    /* =====================================================
+       QUESTION AREA
+       ===================================================== */
+
+    .question-label {
         color: #dce4ee;
         font-size: 14px;
-        font-weight: 650;
-        margin-bottom: 8px;
+        font-weight: 700;
+        margin-bottom: 9px;
     }
 
-    /* Text area */
     textarea {
         background: #10151e !important;
-        color: #f5f7fb !important;
+        color: #f4f7fb !important;
+
         border: 1px solid #263142 !important;
-        border-radius: 14px !important;
+        border-radius: 15px !important;
+
+        font-size: 15px !important;
+        line-height: 1.6 !important;
     }
 
     textarea:focus {
         border-color: #35d9ff !important;
-        box-shadow: 0 0 0 1px #35d9ff33 !important;
+        box-shadow:
+            0 0 0 1px rgba(53, 217, 255, 0.35) !important;
     }
 
-    /* Button */
+
+    /* =====================================================
+       BUTTON
+       ===================================================== */
+
     .stButton > button {
         width: 100%;
         height: 52px;
@@ -203,11 +223,12 @@ st.markdown(
         );
 
         color: white;
+
         font-size: 15px;
-        font-weight: 700;
+        font-weight: 750;
 
         box-shadow:
-            0 8px 28px rgba(52, 167, 255, 0.18);
+            0 8px 28px rgba(52, 167, 255, 0.17);
 
         transition: all 0.2s ease;
     }
@@ -216,52 +237,65 @@ st.markdown(
         transform: translateY(-1px);
 
         box-shadow:
-            0 12px 35px rgba(52, 167, 255, 0.28);
+            0 12px 36px rgba(52, 167, 255, 0.28);
     }
 
-    /* Agent workflow */
-    .workflow-title {
-        font-size: 18px;
-        font-weight: 700;
+
+    /* =====================================================
+       WORKFLOW
+       ===================================================== */
+
+    .workflow-heading {
         margin-top: 42px;
-        margin-bottom: 14px;
+        margin-bottom: 15px;
+
+        font-size: 18px;
+        font-weight: 750;
+        color: #edf2f8;
     }
 
     .agent-grid {
         display: grid;
-        grid-template-columns:
-            repeat(4, 1fr);
-
+        grid-template-columns: repeat(4, 1fr);
         gap: 12px;
-        margin-bottom: 28px;
     }
 
     .agent-card {
-        background: rgba(16, 21, 30, 0.88);
-        border: 1px solid #202b3b;
-        border-radius: 16px;
-        padding: 17px;
         min-height: 112px;
 
-        transition: all 0.2s ease;
+        padding: 17px;
+
+        border-radius: 16px;
+
+        background: rgba(16, 21, 30, 0.88);
+
+        border: 1px solid #202b3b;
+
+        transition:
+            border-color 0.2s ease,
+            box-shadow 0.2s ease;
     }
 
     .agent-card.active {
         border-color: #35d9ff;
+
         box-shadow:
-            0 0 25px rgba(53, 217, 255, 0.12);
+            0 0 26px rgba(53, 217, 255, 0.13);
     }
 
     .agent-card.complete {
         border-color: #38d39f;
+
+        box-shadow:
+            0 0 20px rgba(56, 211, 159, 0.07);
     }
 
-    .agent-number {
-        color: #647287;
-        font-size: 11px;
-        font-weight: 700;
+    .agent-step {
+        color: #5f6d81;
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 1.2px;
         margin-bottom: 10px;
-        letter-spacing: 1px;
     }
 
     .agent-name {
@@ -272,7 +306,7 @@ st.markdown(
     }
 
     .agent-status {
-        color: #7f8b9c;
+        color: #758296;
         font-size: 12px;
     }
 
@@ -284,81 +318,181 @@ st.markdown(
         color: #38d39f;
     }
 
-    /* Result card */
-    .result-container {
-        margin-top: 35px;
-        background: rgba(14, 19, 28, 0.92);
-        border: 1px solid #222e3e;
-        border-radius: 20px;
-        padding: 30px;
-    }
+
+    /* =====================================================
+       RESULT
+       ===================================================== */
 
     .result-header {
+        margin-top: 38px;
+        margin-bottom: 18px;
+
+        padding: 18px 20px;
+
+        border-radius: 16px;
+
+        background: rgba(14, 19, 28, 0.92);
+
+        border: 1px solid #222e3e;
+
         display: flex;
         align-items: center;
         justify-content: space-between;
-        margin-bottom: 20px;
     }
 
     .result-title {
-        font-size: 22px;
-        font-weight: 750;
+        color: #f3f7fb;
+        font-size: 21px;
+        font-weight: 760;
     }
 
     .result-badge {
-        font-size: 11px;
-        font-weight: 700;
+        color: #38d39f;
+
+        background: rgba(
+            56,
+            211,
+            159,
+            0.10
+        );
+
+        border: 1px solid rgba(
+            56,
+            211,
+            159,
+            0.22
+        );
+
         padding: 6px 11px;
+
         border-radius: 20px;
 
-        color: #38d39f;
-        background: rgba(56, 211, 159, 0.10);
-        border: 1px solid rgba(56, 211, 159, 0.22);
+        font-size: 10px;
+        font-weight: 800;
+        letter-spacing: 0.5px;
     }
 
-    /* Markdown */
+
+    /* =====================================================
+       REPORT
+       ===================================================== */
+
+    .report-box {
+        background: rgba(14, 19, 28, 0.80);
+
+        border: 1px solid #222e3e;
+
+        border-radius: 18px;
+
+        padding: 28px;
+    }
+
     .stMarkdown {
-        color: #dce3ed;
-    }
-
-    .stMarkdown h1,
-    .stMarkdown h2,
-    .stMarkdown h3 {
-        color: #f3f7fb;
+        color: #c4ceda;
     }
 
     .stMarkdown h1 {
+        color: #f4f7fb;
         font-size: 30px;
+        font-weight: 780;
     }
 
     .stMarkdown h2 {
+        color: #eaf0f7;
         font-size: 21px;
-        margin-top: 25px;
+        margin-top: 28px;
     }
 
-    .stMarkdown p,
-    .stMarkdown li {
-        line-height: 1.75;
+    .stMarkdown h3 {
+        color: #eaf0f7;
+    }
+
+    .stMarkdown p {
         color: #c2ccd8;
+        line-height: 1.75;
     }
 
-    /* Mobile */
-    @media (max-width: 800px) {
+    .stMarkdown li {
+        color: #c2ccd8;
+        line-height: 1.7;
+    }
+
+    .stMarkdown a {
+        color: #35d9ff;
+    }
+
+
+    /* =====================================================
+       ERROR
+       ===================================================== */
+
+    .error-note {
+        margin-top: 20px;
+
+        padding: 15px 17px;
+
+        border-radius: 13px;
+
+        background: rgba(255, 100, 100, 0.06);
+
+        border: 1px solid rgba(
+            255,
+            100,
+            100,
+            0.18
+        );
+
+        color: #d8a7a7;
+
+        font-size: 13px;
+        line-height: 1.6;
+    }
+
+
+    /* =====================================================
+       FOOTER
+       ===================================================== */
+
+    .footer {
+        text-align: center;
+
+        margin-top: 60px;
+
+        color: #4f5b6d;
+
+        font-size: 12px;
+    }
+
+
+    /* =====================================================
+       RESPONSIVE
+       ===================================================== */
+
+    @media (max-width: 850px) {
 
         .hero-title {
-            font-size: 34px;
+            font-size: 36px;
         }
 
         .agent-grid {
-            grid-template-columns:
-                repeat(2, 1fr);
+            grid-template-columns: repeat(2, 1fr);
         }
     }
 
-    @media (max-width: 500px) {
+    @media (max-width: 520px) {
+
+        .hero-title {
+            font-size: 31px;
+        }
 
         .agent-grid {
             grid-template-columns: 1fr;
+        }
+
+        .result-header {
+            align-items: flex-start;
+            gap: 10px;
+            flex-direction: column;
         }
     }
 
@@ -368,11 +502,21 @@ st.markdown(
 )
 
 
-# ---------------------------------------------------------
-# UI HELPERS
-# ---------------------------------------------------------
+# =========================================================
+# FUNCTIONS
+# =========================================================
+
+def reset_agents():
+    st.session_state.agent_states = {
+        "Researcher": "waiting",
+        "Fact Checker": "waiting",
+        "Analyst": "waiting",
+        "Writer": "waiting",
+    }
+
 
 def render_brand():
+
     st.markdown(
         """
         <div class="brand">
@@ -397,14 +541,14 @@ def render_brand():
     )
 
 
-def render_agents():
+def render_workflow():
 
     cards = ""
 
-    for index, agent_name in enumerate(AGENTS):
+    for index, agent in enumerate(AGENTS):
 
         state = st.session_state.agent_states.get(
-            agent_name,
+            agent,
             "waiting",
         )
 
@@ -423,12 +567,12 @@ def render_agents():
         cards += f"""
         <div class="agent-card {card_class}">
 
-            <div class="agent-number">
+            <div class="agent-step">
                 STEP {index + 1}
             </div>
 
             <div class="agent-name">
-                {agent_name}
+                {agent}
             </div>
 
             <div class="agent-status">
@@ -448,74 +592,58 @@ def render_agents():
     )
 
 
-def clean_result(result):
-
-    if result is None:
-        return ""
-
-    if hasattr(result, "raw"):
-        text = result.raw
-    else:
-        text = str(result)
-
-    if not isinstance(text, str):
-        text = str(text)
-
-    # Remove accidental Python-style object representations.
-    text = re.sub(
-        r"<(?:class|function|module)[^>]*>",
-        "",
-        text,
-    )
-
-    # Remove common internal execution labels.
-    text = re.sub(
-        r"(?i)(agent execution|agent output|task output):",
-        "",
-        text,
-    )
-
-    return text.strip()
-
-
 def update_agent_status(agent):
 
-    agent_text = ""
+    agent_name = ""
 
     if hasattr(agent, "role"):
-        agent_text = str(agent.role)
+        agent_name = str(agent.role)
 
     elif hasattr(agent, "agent"):
-        internal_agent = getattr(agent, "agent", None)
+
+        internal_agent = getattr(
+            agent,
+            "agent",
+            None,
+        )
 
         if hasattr(internal_agent, "role"):
-            agent_text = str(internal_agent.role)
+            agent_name = str(
+                internal_agent.role
+            )
 
     else:
-        agent_text = str(agent)
+        agent_name = str(agent)
 
-    agent_text = agent_text.lower()
+    agent_name = agent_name.lower()
 
-    matched_agent = None
+    matched = None
 
-    if "research" in agent_text:
-        matched_agent = "Researcher"
+    if "research" in agent_name:
+        matched = "Researcher"
 
-    elif "fact" in agent_text or "verification" in agent_text:
-        matched_agent = "Fact Checker"
+    elif (
+        "fact" in agent_name
+        or "verification" in agent_name
+    ):
+        matched = "Fact Checker"
 
-    elif "analyst" in agent_text or "analysis" in agent_text:
-        matched_agent = "Analyst"
+    elif (
+        "analyst" in agent_name
+        or "analysis" in agent_name
+    ):
+        matched = "Analyst"
 
-    elif "writer" in agent_text or "writing" in agent_text:
-        matched_agent = "Writer"
+    elif (
+        "writer" in agent_name
+        or "writing" in agent_name
+    ):
+        matched = "Writer"
 
-    if matched_agent is None:
+    if matched is None:
         return
 
-    st.session_state.current_agent = matched_agent
-
-    current_index = AGENTS.index(matched_agent)
+    current_index = AGENTS.index(matched)
 
     for index, name in enumerate(AGENTS):
 
@@ -529,16 +657,39 @@ def update_agent_status(agent):
             st.session_state.agent_states[name] = "waiting"
 
 
-# ---------------------------------------------------------
+def clean_result(result):
+
+    if result is None:
+        return ""
+
+    if hasattr(result, "raw"):
+        text = result.raw
+    else:
+        text = str(result)
+
+    if not isinstance(text, str):
+        text = str(text)
+
+    # Remove common internal execution labels.
+    text = re.sub(
+        r"(?i)(agent execution|agent output|task output):",
+        "",
+        text,
+    )
+
+    return text.strip()
+
+
+# =========================================================
 # BRAND
-# ---------------------------------------------------------
+# =========================================================
 
 render_brand()
 
 
-# ---------------------------------------------------------
+# =========================================================
 # HERO
-# ---------------------------------------------------------
+# =========================================================
 
 st.markdown(
     """
@@ -546,12 +697,14 @@ st.markdown(
 
         <div class="hero-title">
             Research anything with a
-            <span>team of AI agents.</span>
+            <span class="hero-gradient">
+                team of AI agents.
+            </span>
         </div>
 
-        <div class="hero-text">
-            Ask a research question and let four specialized AI agents
-            search, verify, analyze, and write a clear research report.
+        <div class="hero-description">
+            Ask a research question and let specialized AI agents
+            research, verify, analyze, and write a clear report.
         </div>
 
     </div>
@@ -560,29 +713,33 @@ st.markdown(
 )
 
 
-# ---------------------------------------------------------
-# QUESTION INPUT
-# ---------------------------------------------------------
+# =========================================================
+# QUESTION
+# =========================================================
 
 st.markdown(
-    '<div class="input-label">What would you like to research?</div>',
+    """
+    <div class="question-label">
+        What would you like to research?
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
 question = st.text_area(
-    "",
+    "Research question",
     height=125,
     placeholder=(
-        "Example: What are the latest applications of generative AI "
-        "in healthcare?"
+        "Example: What are the latest applications "
+        "of generative AI in healthcare?"
     ),
     label_visibility="collapsed",
 )
 
 
-# ---------------------------------------------------------
-# BUTTON
-# ---------------------------------------------------------
+# =========================================================
+# START BUTTON
+# =========================================================
 
 run_research = st.button(
     "✦  Start Research",
@@ -590,21 +747,25 @@ run_research = st.button(
 )
 
 
-# ---------------------------------------------------------
-# WORKFLOW TITLE
-# ---------------------------------------------------------
+# =========================================================
+# WORKFLOW
+# =========================================================
 
 st.markdown(
-    '<div class="workflow-title">Research workflow</div>',
+    """
+    <div class="workflow-heading">
+        Research workflow
+    </div>
+    """,
     unsafe_allow_html=True,
 )
 
-render_agents()
+render_workflow()
 
 
-# ---------------------------------------------------------
-# RUN RESEARCH
-# ---------------------------------------------------------
+# =========================================================
+# EXECUTION
+# =========================================================
 
 if run_research:
 
@@ -616,24 +777,25 @@ if run_research:
 
         st.stop()
 
-    # Reset states
-    st.session_state.current_agent = "Researcher"
-
-    st.session_state.agent_states = {
-        "Researcher": "active",
-        "Fact Checker": "waiting",
-        "Analyst": "waiting",
-        "Writer": "waiting",
-    }
-
+    # Clear old result.
     st.session_state.research_result = None
 
-    # Refresh workflow
-    render_agents()
+    st.session_state.last_question = question.strip()
+
+    reset_agents()
+
+    # Researcher starts.
+    st.session_state.agent_states[
+        "Researcher"
+    ] = "active"
+
+    render_workflow()
 
     try:
 
-        with st.spinner("Your research team is working..."):
+        with st.spinner(
+            "Your research team is working..."
+        ):
 
             crew = build_crew(
                 status_callback=update_agent_status
@@ -645,7 +807,7 @@ if run_research:
                 }
             )
 
-        # Mark all agents complete
+        # All agents completed.
         st.session_state.agent_states = {
             "Researcher": "complete",
             "Fact Checker": "complete",
@@ -653,53 +815,50 @@ if run_research:
             "Writer": "complete",
         }
 
-        st.session_state.current_agent = None
-
         st.session_state.research_result = clean_result(
             result
         )
 
-    except Exception:
+    except Exception as e:
 
-        st.session_state.agent_states = {
-            "Researcher": "waiting",
-            "Fact Checker": "waiting",
-            "Analyst": "waiting",
-            "Writer": "waiting",
-        }
-
-        st.session_state.current_agent = None
+        reset_agents()
 
         st.error(
-            "The research could not be completed right now. "
-            "Please wait a little and try again."
+            "Research could not be completed right now. "
+            "Please try again in a moment."
         )
+
+        # Keep technical information hidden
+        # unless the user explicitly opens it.
+        with st.expander(
+            "Technical details"
+        ):
+            st.code(
+                str(e),
+                language="text",
+            )
 
         st.stop()
 
 
-# ---------------------------------------------------------
-# SHOW UPDATED WORKFLOW
-# ---------------------------------------------------------
+# =========================================================
+# FINAL RESULT
+# =========================================================
 
 if st.session_state.research_result:
 
-    render_agents()
+    render_workflow()
 
     st.markdown(
         """
-        <div class="result-container">
+        <div class="result-header">
 
-            <div class="result-header">
+            <div class="result-title">
+                Research Report
+            </div>
 
-                <div class="result-title">
-                    Research Report
-                </div>
-
-                <div class="result-badge">
-                    RESEARCH COMPLETE
-                </div>
-
+            <div class="result-badge">
+                RESEARCH COMPLETE
             </div>
 
         </div>
@@ -708,23 +867,28 @@ if st.session_state.research_result:
     )
 
     st.markdown(
+        '<div class="report-box">',
+        unsafe_allow_html=True,
+    )
+
+    st.markdown(
         st.session_state.research_result
     )
 
+    st.markdown(
+        '</div>',
+        unsafe_allow_html=True,
+    )
 
-# ---------------------------------------------------------
+
+# =========================================================
 # FOOTER
-# ---------------------------------------------------------
+# =========================================================
 
 st.markdown(
     """
-    <div style="
-        text-align:center;
-        margin-top:60px;
-        color:#566274;
-        font-size:12px;
-    ">
-        Research AI · Powered by a multi-agent research workflow
+    <div class="footer">
+        Research AI · Multi-agent research workflow
     </div>
     """,
     unsafe_allow_html=True,
