@@ -5,19 +5,15 @@ def create_writer(llm, step_callback=None):
 
     return Agent(
         role="Research Report Writer",
-        goal=(
-            "Turn verified research and analysis into a clear, professional "
-            "and concise research report."
-        ),
+        goal="Create a clear and concise final research report.",
         backstory=(
-            "You are an experienced research writer. You communicate complex "
-            "information clearly, preserve uncertainty, and never invent facts "
-            "or sources."
+            "You are a professional research writer who presents "
+            "verified information clearly and accurately."
         ),
         llm=llm,
         allow_delegation=False,
         verbose=False,
-        max_iter=2,
+        max_iter=1,
         max_retry_limit=1,
         step_callback=step_callback,
     )
