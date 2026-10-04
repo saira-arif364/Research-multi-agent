@@ -1,36 +1,22 @@
 from crewai import Agent
 
-from tools import CalculatorTool
-
 
 def create_analyst(llm, step_callback=None):
 
-    calculator = CalculatorTool()
-
     return Agent(
         role="Research Analyst",
-
         goal=(
-            "Turn verified research into a structured, evidence-based analysis. "
-            "Identify patterns, important findings, disagreements, and limitations."
+            "Analyze verified research findings and identify the most "
+            "important insights, patterns, comparisons, and limitations."
         ),
-
         backstory=(
-            "You are a critical research analyst. "
-            "You work from the research and fact-checking evidence provided to you. "
-            "You do not invent missing information. "
-            "When numerical claims require verification, use the calculator."
+            "You are an analytical research specialist. You focus on verified "
+            "evidence and turn research findings into clear and useful insights."
         ),
-
         llm=llm,
-
-        tools=[
-            calculator,
-        ],
-
         allow_delegation=False,
         verbose=False,
-        max_iter=6,
-        max_retry_limit=2,
+        max_iter=2,
+        max_retry_limit=1,
         step_callback=step_callback,
     )
