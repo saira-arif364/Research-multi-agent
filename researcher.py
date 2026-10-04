@@ -18,7 +18,7 @@ def create_researcher(llm, tools=None, step_callback=None):
         tools=tools,
         allow_delegation=False,
         verbose=False,
-        max_iter=2,
+        max_iter=1,
         max_retry_limit=1,
         step_callback=step_callback,
     )
