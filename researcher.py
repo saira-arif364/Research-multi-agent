@@ -1,5 +1,5 @@
 from crewai import Agent
-from crewai_tools import ScrapeWebsiteTool, TavilySearchTool
+from crewai_tools import TavilySearchTool
 
 
 def create_researcher(llm, tools=None, step_callback=None):
@@ -7,26 +7,24 @@ def create_researcher(llm, tools=None, step_callback=None):
     if tools is None:
         tools = [
             TavilySearchTool(),
-            ScrapeWebsiteTool(),
         ]
 
     return Agent(
-        role="Senior Web Researcher",
+        role="Research Specialist",
         goal=(
-            "Find accurate, recent, relevant information from reliable "
-            "web sources and build a strong evidence base for the research question."
+            "Find accurate, recent, relevant information about the research "
+            "question using reliable web sources."
         ),
         backstory=(
-            "You are a meticulous research specialist. "
-            "You search broadly but prefer primary sources, official documentation, "
-            "academic papers, reputable organizations, and high-quality journalism. "
-            "You distinguish facts from opinions and never invent sources."
+            "You are a careful research specialist. You search the web, "
+            "prefer trustworthy sources, collect important evidence, and "
+            "avoid unsupported claims."
         ),
         llm=llm,
         tools=tools,
         allow_delegation=False,
         verbose=False,
-        max_iter=8,
-        max_retry_limit=2,
+        max_iter=3,
+        max_retry_limit=1,
         step_callback=step_callback,
     )
